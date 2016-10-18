@@ -1,0 +1,42 @@
+version: '2'
+volumes:
+  dados:
+
+services:
+  web:
+    image: jonathanbaraldi/docker-autoscaling-nodejs # build local
+    restart: "always"
+    volumes:
+        -  dados:/tmp/volumeteste
+    ports:
+      - 8080
+    networks:
+      - front-tier
+      - back-tier
+
+  redis:
+    image: redis
+    ports:
+      - 6379
+    links:
+      - web
+    networks:
+      - back-tier
+
+  lb:
+    image: dockercloud/haproxy
+    ports:
+      - 80:80
+    links:
+      - web
+    networks:
+      - front-tier
+      - back-tier
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
